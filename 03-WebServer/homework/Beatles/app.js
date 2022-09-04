@@ -22,3 +22,54 @@ var beatles=[{
   profilePic:"http://cp91279.biography.com/BIO_Bio-Shorts_0_Ringo-Starr_SF_HD_768x432-16x9.jpg"
 }
 ]
+
+http.createServer((req, res) => {
+  if (req.url === "/api" || req.url === "/api/") {
+    res.writeHead(200, { "Content-type": "application/json" });
+    res.end(JSON.stringify(beatles));
+  }
+  // /api/John lennon
+  // /api/Paul McCartney
+  // /api/George Harrison
+  // /api/Richard Starkey
+  if (req.url.substring(0, 5) === "/api/" && req.url.length > 5) {
+    // url = /api/John%20Lennon
+    // req.url.substring(0, 5) = "/api/"
+    // req.url.length = 8
+    let findBeatle = req.url.split("/").pop(); // John%20Lennon
+    // req.url.split("/") = [api, John%20lennon]
+    let foundBeatle = beatles.find(beatle => findBeatle === encodeURI(beatle.name));
+    // let foundBeatle = beatles.find(beatle => decodeURI(findBeatle) === beatle.name);
+    if (foundBeatle) {
+      res.writeHead(200, { "Content-type": "application/json" });
+      res.end(JSON.stringify(foundBeatle));
+    } else {
+      res.writeHead(404, { "Content-type": "text/plain" });
+      res.end("No existe");
+    }
+  }
+
+  if (req.url === "/") {
+    res.writeHead(200, { "Content-type": "text/html" });
+    const index = fs.readFileSync(`${__dirname}/index.html`);
+    res.end(index);
+  }
+
+  // /John Lennon
+  let findBeatle = req.url.split("/").pop();
+  let foundBeatle = beatles.find(b => findBeatle === encodeURI(b.name));
+  console.log(foundBeatle);
+  if (foundBeatle) {
+    res.writeHead(200, { "Content-type": "text/html" });
+    let read = fs.readFileSync(`${__dirname}/beatle.html`, "utf-8");
+    read = read.replace(/{name}/g, foundBeatle.name);
+    read = read.replace("{birthdate}", foundBeatle.birthdate);
+    read = read.replace("{profilePic}", foundBeatle.profilePic);
+    // let finalHTML = replaceData(read, foundBeatle);
+    res.end(read);
+  } else {
+    res.writeHead(404, { "Content-type": "text/plain" });
+    res.end("No exite ese Beatle");
+  }
+  
+}).listen(3000, "127.0.0.1", () => console.log("Listening on port 3000"));
